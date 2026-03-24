@@ -1,0 +1,14 @@
+# Security
+.env
+config.json  # (Or wherever you store your bot token/passwords)
+credentials.json
+
+# Python Cache
+cogs/__pycache__/
+__pycache__/
+*.py[cod]
+
+# Virtual Environments
+venv/
+env/
+credentials.json

@@ -1,0 +1,60 @@
+{
+    "team_ids": {
+        "158405": "sbhl Hartford whalers",
+        "31454": "SBHL Ottawa Senators",
+        "162418": "SBHL ANAHEIM DUCKS",
+        "158376": "SBHL Quebec Nordiques",
+        "158643": "sbhlcalifornia",
+        "156449": "RK jasper grizzlies"
+    },
+    "processed_match_ids": [],
+    "announcement_channel_id": 1471744365247594649,
+    "logging_channel_id": 1473424623784951958,
+    "platform": "common-gen5",
+    "google_sheet_name": "MyStatsSheet",
+    "results_channel_id": 1477433697908035634,
+    "scan_schedule": {
+        "days": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "start_hour": 22,
+        "end_hour": 23,
+        "enabled": true,
+        "scan_public": false,
+        "scan_playoffs": false
+    },
+    "standings_channel_id": 1477488747267362938,
+    "season_results_past_ids": [],
+    "season_results_current_id": "1486098635471978517",
+    "team_menu_channel_id": "1482159905074057375",
+    "team_menu_message_id": "1486071347913162922",
+    "roster_channel_id": 1476663049523040366,
+    "roster_msg_id": 1482454309651222852,
+    "dnf_channel_id": 1485082876029567178,
+    "leaders_channel_id": 1484813194701705246,
+    "auto_standings_message_id": "1486072905510027304",
+    "rosters_channel_id": 1476663049523040366,
+    "auto_rosters_message_id": "1486072949881700433",
+    "widget_team_posts": [],
+    "widget_leaders_posts": [
+        {
+            "cid": "1484813194701705246",
+            "mid": "1485514490601541683"
+        }
+    ],
+    "widget_games_posts": [
+        {
+            "cid": "1477433697908035634",
+            "mid": "1485516265895362712"
+        }
+    ],
+    "auto_leaders_message_id": "1486072917648474334",
+    "team_cards_channel_id": 1482159905074057375,
+    "auto_team_cards_message_id": "{}"
+}

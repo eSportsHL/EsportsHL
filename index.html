@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Echelon League</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0a0c10;--bg2:#0f1218;--bg3:#141820;--bg4:#1a2030;
+  --border:#1e2535;--border2:#252d3d;
+  --accent:#e8412a;--blue:#3d8ef0;
+  --text:#e8ecf2;--text2:#8896ab;--text3:#555f70;
+  --win:#3fb950;--loss:#f85149;--otl:#f0883e;--gold:#f0b429;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;min-height:100vh;-webkit-font-smoothing:antialiased}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.5}
+
+/* NAV */
+#topnav{position:sticky;top:0;z-index:500;background:rgba(10,12,16,.96);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;padding:0 18px;gap:0}
+.nav-brand{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:19px;letter-spacing:.05em;text-transform:uppercase;color:var(--text);display:flex;align-items:center;gap:8px;margin-right:24px;flex-shrink:0}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+.nav-tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:0 15px;height:36px;display:flex;align-items:center;gap:5px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-radius:5px;white-space:nowrap;transition:color .15s,background .15s}
+.nav-tab:hover{color:var(--text);background:var(--bg3)}
+.nav-tab.active{color:#fff;background:var(--accent);box-shadow:0 0 14px rgba(232,65,42,.3)}
+.nav-meta{font-size:11px;color:var(--text3);font-family:'Rajdhani',sans-serif;letter-spacing:.04em;flex-shrink:0;margin-left:10px}
+
+/* PAGES */
+.page{display:none;animation:fadeUp .2s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.page-inner{max-width:1100px;margin:0 auto;padding:22px 15px 80px}
+.page-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:24px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:16px}
+.page-title span{color:var(--accent)}
+
+/* SURFACE */
+.surface{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px}
+
+/* CONTROLS */
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.input-search{background:var(--bg2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 12px;outline:none;flex:1;min-width:180px;transition:border-color .2s}
+.input-search:focus{border-color:var(--accent)}
+.input-search::placeholder{color:var(--text3)}
+.pill{font-family:'Rajdhani',sans-serif;font-weight:600;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:7px 13px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap}
+.pill:hover{border-color:var(--text2);color:var(--text)}
+.pill.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(20,24,32,.8)}
+thead th{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:10px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);user-select:none}
+thead th.r{text-align:right}
+thead th.sortable{cursor:pointer}
+thead th.sortable:hover{color:var(--text2)}
+thead th.sort-desc::after{content:' ↓';color:var(--accent)}
+thead th.sort-asc::after{content:' ↑';color:var(--accent)}
+tbody tr{border-bottom:1px solid rgba(30,37,53,.6);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(61,142,240,.04)}
+td{padding:10px 12px;white-space:nowrap;font-size:13px}
+td.r{text-align:right;color:var(--text2)}
+td.hl{color:var(--text);font-weight:500}
+td.pts{text-align:right;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:16px;color:var(--accent)}
+td.rank{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--text3);width:36px}
+td.rank.r1{color:var(--gold)}td.rank.r2{color:#b0bec5}td.rank.r3{color:#a1887f}
+.diff-pos{color:var(--win)}.diff-neg{color:var(--loss)}.diff-neu{color:var(--text3)}
+.chip{display:inline-flex;align-items:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;padding:2px 7px;border-radius:3px;letter-spacing:.05em}
+.cw{background:rgba(63,185,80,.12);color:var(--win)}.cl{background:rgba(248,81,73,.12);color:var(--loss)}
+.cotl{background:rgba(240,136,62,.12);color:var(--otl)}.cotw{background:rgba(63,185,80,.12);color:var(--win)}
+.cwff{background:rgba(63,185,80,.08);color:var(--win)}.clff{background:rgba(248,81,73,.08);color:var(--loss)}
+
+/* LOGO */
+.team-logo{width:28px;height:28px;object-fit:contain;flex-shrink:0;border-radius:3px}
+.team-logo-sm{width:20px;height:20px;object-fit:contain;flex-shrink:0}
+.team-logo-lg{width:48px;height:48px;object-fit:contain;flex-shrink:0}
+.team-logo-placeholder{width:28px;height:28px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:9px;color:var(--text3)}
+.team-cell{display:flex;align-items:center;gap:10px}
+
+/* GAMES */
+.games-list{display:flex;flex-direction:column;gap:8px}
+.game-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.game-card:hover{border-color:var(--border2)}
+.game-top{display:grid;grid-template-columns:1fr 110px 1fr;align-items:center;gap:6px;padding:14px 18px 10px}
+.gt-l{text-align:left;display:flex;align-items:center;gap:10px;min-width:0}
+.gt-r{text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0}
+.gt-info{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.gt-name{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:15px;letter-spacing:.02em;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gt-name.w{color:var(--text)}.gt-name.l{color:var(--text2)}
+.score-block{display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:30px}
+.sn.w{color:var(--text)}.sn.l{color:var(--text3)}.ssep{color:var(--border2);font-size:20px}
+.game-footer{border-top:1px solid var(--border);padding:7px 18px;display:flex;align-items:center;justify-content:space-between;background:rgba(15,18,24,.5)}
+.game-meta{font-size:11px;color:var(--text3);font-family:'Rajdhani',sans-serif;letter-spacing:.04em}
+.type-badge{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.07em;padding:2px 8px;border-radius:3px}
+.tb-REG{background:rgba(61,142,240,.12);color:var(--blue)}.tb-OT{background:rgba(240,180,41,.12);color:var(--gold)}.tb-DNF{background:rgba(240,136,62,.12);color:var(--otl)}
+
+/* LEADERS */
+.leaders-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-bottom:18px}
+.leader-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.leader-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.leader-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(30,37,53,.5)}
+.leader-row:last-child{border-bottom:none}
+.lr-rank{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--text3);width:18px;flex-shrink:0}
+.lr-rank.r1{color:var(--gold)}
+.lr-info{flex:1;min-width:0}
+.lr-name{font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-team{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lr-bar{height:2px;background:var(--border);border-radius:1px;margin-top:4px}
+.lr-bar-fill{height:100%;background:var(--accent);border-radius:1px;transition:width .5s ease}
+.lr-val{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;color:var(--accent);min-width:44px;text-align:right}
+
+/* ROSTERS */
+.rosters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:12px}
+.roster-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.roster-head{background:rgba(26,32,48,.5);border-bottom:1px solid var(--border);padding:11px 15px;display:flex;align-items:center;gap:10px}
+.roster-tname{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;transition:color .15s;flex:1}
+.roster-tname:hover{color:var(--accent)}
+.roster-cnt{font-size:11px;color:var(--text3);flex-shrink:0}
+.roster-player{display:flex;justify-content:space-between;align-items:center;padding:8px 15px;border-bottom:1px solid rgba(30,37,53,.4);font-size:13px;transition:background .1s}
+.roster-player:last-child{border-bottom:none}
+.roster-player:hover{background:rgba(61,142,240,.04)}
+.roster-gp{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;color:var(--text3)}
+
+/* TEAM PAGE */
+.back-btn{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:7px 13px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;margin-bottom:14px}
+.back-btn:hover{color:var(--text);border-color:var(--text2)}
+.team-hero{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:12px;display:flex;align-items:center;gap:18px}
+.team-hero-logo{width:64px;height:64px;object-fit:contain;flex-shrink:0}
+.team-hero-info{flex:1}
+.team-name-big{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:26px;letter-spacing:.04em;text-transform:uppercase;line-height:1;margin-bottom:4px}
+.team-record{font-size:13px;color:var(--text2)}
+.team-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.tsg-cell{background:var(--bg2);padding:14px 15px}
+.tsg-lbl{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:2px}
+.tsg-val{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;color:var(--text);line-height:1}
+.subtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px}
+.subtab{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:10px 17px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;margin-bottom:-1px}
+.subtab:hover{color:var(--text)}
+.subtab.active{color:var(--text);border-bottom-color:var(--accent)}
+.section-lbl{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:10px 0 6px}
+
+/* STATE */
+.state-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;color:var(--text3);text-align:center;gap:10px}
+.state-icon{font-size:36px}
+.state-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;letter-spacing:.04em;text-transform:uppercase}
+.state-sub{font-size:13px;max-width:340px;line-height:1.5}
+.spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:600px){
+  .nav-brand{font-size:16px;margin-right:12px}.nav-meta{display:none}
+  .page-inner{padding:14px 11px 60px}
+  .game-top{grid-template-columns:1fr 85px 1fr;padding:11px 12px 9px}
+  .score-block{font-size:24px;gap:6px}.gt-name{font-size:13px}
+  .team-stat-grid{grid-template-columns:repeat(2,1fr)}
+  .leaders-grid{grid-template-columns:1fr}
+  .team-logo{width:22px;height:22px}
+  .game-top .team-logo{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav id="topnav">
+  <div class="nav-brand"><div class="nav-dot"></div>Echelon League</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="standings">Standings</button>
+    <button class="nav-tab" data-page="skaters">Skaters</button>
+    <button class="nav-tab" data-page="goalies">Goalies</button>
+    <button class="nav-tab" data-page="games">Games</button>
+    <button class="nav-tab" data-page="rosters">Rosters</button>
+  </div>
+  <div class="nav-meta" id="nav-meta"></div>
+</nav>
+
+<!-- STANDINGS -->
+<div class="page active" id="page-standings">
+  <div class="page-inner">
+    <div class="page-title">League <span>Standings</span></div>
+    <div id="standings-body"><div class="state-box"><div class="spinner"></div><div class="state-title">Loading</div></div></div>
+  </div>
+</div>
+
+<!-- SKATERS -->
+<div class="page" id="page-skaters">
+  <div class="page-inner">
+    <div class="page-title">Skater <span>Leaders</span></div>
+    <div class="leaders-grid" id="skater-leaders"></div>
+    <div class="page-title" style="font-size:19px;margin-bottom:12px">All <span>Skaters</span></div>
+    <div class="controls">
+      <input class="input-search" id="skater-search" placeholder="Search player or team…"/>
+      <button class="pill active" data-skp="all">All</button>
+      <button class="pill" data-skp="C">C</button>
+      <button class="pill" data-skp="LW">LW</button>
+      <button class="pill" data-skp="RW">RW</button>
+      <button class="pill" data-skp="D">D</button>
+    </div>
+    <div class="surface"><div class="tbl-wrap" id="skater-table"><div class="state-box"><div class="spinner"></div></div></div></div>
+  </div>
+</div>
+
+<!-- GOALIES -->
+<div class="page" id="page-goalies">
+  <div class="page-inner">
+    <div class="page-title">Goalie <span>Stats</span></div>
+    <div class="leaders-grid" id="goalie-leaders"></div>
+    <div class="page-title" style="font-size:19px;margin-bottom:12px">All <span>Goalies</span></div>
+    <div class="controls"><input class="input-search" id="goalie-search" placeholder="Search player or team…"/></div>
+    <div class="surface"><div class="tbl-wrap" id="goalie-table"><div class="state-box"><div class="spinner"></div></div></div></div>
+  </div>
+</div>
+
+<!-- GAMES -->
+<div class="page" id="page-games">
+  <div class="page-inner">
+    <div class="page-title">Game <span>Results</span></div>
+    <div class="controls">
+      <input class="input-search" id="games-search" placeholder="Search team or match ID…"/>
+      <button class="pill active" data-gf="all">All</button>
+      <button class="pill" data-gf="REG">Regulation</button>
+      <button class="pill" data-gf="OT">Overtime</button>
+      <button class="pill" data-gf="DNF">DNF</button>
+    </div>
+    <div id="games-body"><div class="state-box"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- ROSTERS -->
+<div class="page" id="page-rosters">
+  <div class="page-inner">
+    <div class="page-title">Team <span>Rosters</span></div>
+    <div class="controls"><input class="input-search" id="roster-search" placeholder="Search team or player…"/></div>
+    <div id="rosters-body"><div class="state-box"><div class="spinner"></div></div></div>
+  </div>
+</div>
+
+<!-- TEAM -->
+<div class="page" id="page-team">
+  <div class="page-inner" id="team-inner"></div>
+</div>
+
+<script>
+let D=null,skSort={col:'pts',dir:'desc'},goSort={col:'svp',dir:'desc'},skPos='all',gFilter='all',prevPage='standings';
+
+// ── NAV ───────────────────────────────────────────────────
+document.querySelectorAll('.nav-tab').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.page)));
+function nav(p){
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.toggle('active',b.dataset.page===p));
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.toggle('active',pg.id==='page-'+p));
+  window.scrollTo(0,0);
+}
+
+// ── LOAD ──────────────────────────────────────────────────
+async function load(){
+  try{
+    const r=await fetch('stats.json?t='+Date.now());
+    if(!r.ok)throw 0;
+    D=await r.json();
+    const ts=D.meta?.exported_at?new Date(D.meta.exported_at):null;
+    document.getElementById('nav-meta').textContent=ts?'Updated '+ts.toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+    renderAll();
+  }catch(e){
+    const msg=`<div class="state-box"><div class="state-icon">⚠️</div><div class="state-title">No Data</div><div class="state-sub">Run <code>/exportstats</code> in Discord, then ensure <code>stats.json</code> is in the same folder as this file.</div></div>`;
+    ['standings-body','skater-table','goalie-table','games-body','rosters-body'].forEach(id=>setHTML(id,msg));
+  }
+}
+function renderAll(){renderStandings();renderSkaters();renderGoalies();renderGames();renderRosters()}
+function setHTML(id,h){const el=document.getElementById(id);if(el)el.innerHTML=h}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function empty(id,msg){setHTML(id,`<div class="state-box"><div class="state-icon">🏒</div><div class="state-title">${msg}</div></div>`)}
+
+// ── LOGO HELPER ───────────────────────────────────────────
+function logoImg(src, cls='team-logo', alt='') {
+  if(!src) return `<div class="${cls.replace('team-logo','team-logo-placeholder')}" title="${esc(alt)}">${esc(alt.slice(0,3).toUpperCase())}</div>`;
+  return `<img src="${esc(src)}" class="${cls}" alt="${esc(alt)}" onerror="this.style.display='none'"/>`;
+}
+
+// ── STANDINGS ─────────────────────────────────────────────
+function renderStandings(){
+  const rows=D.standings||[];
+  if(!rows.length){empty('standings-body','No standings yet');return}
+  setHTML('standings-body',`<div class="surface"><div class="tbl-wrap"><table>
+    <thead><tr>
+      <th style="width:36px">#</th>
+      <th style="width:36px"></th>
+      <th>Team</th>
+      <th class="r">GP</th><th class="r">W</th><th class="r">L</th><th class="r">OTL</th>
+      <th class="r">PTS</th><th class="r">GF</th><th class="r">GA</th><th class="r">DIFF</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>{
+      const rc=r.rank===1?'r1':r.rank===2?'r2':r.rank===3?'r3':'';
+      const diff=r.diff>0?'+'+r.diff:r.diff;
+      const dc=r.diff>0?'diff-pos':r.diff<0?'diff-neg':'diff-neu';
+      return `<tr style="cursor:pointer" data-team="${esc(r.team)}">
+        <td class="rank ${rc}">${r.rank}</td>
+        <td style="padding:6px 8px">${logoImg(r.logo,'team-logo-sm',r.team)}</td>
+        <td class="hl">${esc(r.team)}</td>
+        <td class="r">${r.gp}</td><td class="r">${r.w}</td><td class="r">${r.l}</td><td class="r">${r.otl}</td>
+        <td class="pts">${r.pts}</td>
+        <td class="r">${r.gf}</td><td class="r">${r.ga}</td>
+        <td class="r ${dc}">${diff}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div></div>`);
+  document.querySelectorAll('#standings-body [data-team]').forEach(row=>
+    row.addEventListener('click',()=>showTeam(row.dataset.team,'standings'))
+  );
+}
+
+// ── SKATERS ───────────────────────────────────────────────
+function renderSkaters(){
+  let pl=(D.player_stats||[]).filter(p=>!p.is_goalie);
+  const search=(document.getElementById('skater-search')?.value||'').toLowerCase();
+  // Filter by normalized position (LW/RW/C/D)
+  if(skPos!=='all') pl=pl.filter(p=>(p.position||'').toUpperCase()===skPos);
+  if(search) pl=pl.filter(p=>p.name.toLowerCase().includes(search)||(p.team||'').toLowerCase().includes(search));
+  pl=[...pl].sort((a,b)=>skSort.dir==='desc'?(b[skSort.col]??0)-(a[skSort.col]??0):(a[skSort.col]??0)-(b[skSort.col]??0));
+
+  if(!document.querySelector('#skater-leaders .leader-card')){
+    const sk=(D.player_stats||[]).filter(p=>!p.is_goalie);
+    document.getElementById('skater-leaders').innerHTML=
+      ldrBlock(sk,'pts','Points')+ldrBlock(sk,'g','Goals')+ldrBlock(sk,'a','Assists')+ldrBlock(sk,'hits','Hits');
+  }
+
+  const sc=c=>skSort.col===c?(skSort.dir==='desc'?'sort-desc':'sort-asc'):'';
+  const html=pl.length===0?'<div class="state-box"><div class="state-icon">🔍</div><div class="state-title">No players found</div></div>':
+    `<table><thead><tr>
+      <th style="width:36px">#</th>
+      <th style="width:28px"></th>
+      <th>Player</th><th>Team</th><th class="r">POS</th>
+      <th class="r sortable ${sc('gp')}" data-sk="gp">GP</th>
+      <th class="r sortable ${sc('g')}" data-sk="g">G</th>
+      <th class="r sortable ${sc('a')}" data-sk="a">A</th>
+      <th class="r sortable ${sc('pts')}" data-sk="pts">PTS</th>
+      <th class="r sortable ${sc('plus_minus')}" data-sk="plus_minus">+/-</th>
+      <th class="r sortable ${sc('hits')}" data-sk="hits">HIT</th>
+      <th class="r sortable ${sc('shots')}" data-sk="shots">SOG</th>
+      <th class="r sortable ${sc('pim')}" data-sk="pim">PIM</th>
+    </tr></thead><tbody>${pl.map((p,i)=>{
+      const pm=p.plus_minus||0;
+      const pmc=pm>0?'diff-pos':pm<0?'diff-neg':'diff-neu';
+      return `<tr>
+        <td class="rank">${i+1}</td>
+        <td style="padding:6px 8px">${logoImg(p.logo,'team-logo-sm',p.team||'')}</td>
+        <td class="hl">${esc(p.name)}</td>
+        <td style="color:var(--text2);font-size:12px">${esc(p.team||'—')}</td>
+        <td class="r" style="font-size:12px;color:var(--text3)">${esc(p.position||'—')}</td>
+        <td class="r">${p.gp}</td><td class="r">${p.g}</td><td class="r">${p.a}</td>
+        <td class="pts">${p.pts}</td>
+        <td class="r ${pmc}">${pm>0?'+'+pm:pm}</td>
+        <td class="r">${p.hits}</td><td class="r">${p.shots}</td><td class="r">${p.pim}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  setHTML('skater-table',html);
+  document.querySelectorAll('[data-sk]').forEach(th=>th.addEventListener('click',()=>{
+    if(skSort.col===th.dataset.sk)skSort.dir=skSort.dir==='desc'?'asc':'desc';
+    else{skSort.col=th.dataset.sk;skSort.dir='desc';}
+    renderSkaters();
+  }));
+}
+
+// ── GOALIES ───────────────────────────────────────────────
+function renderGoalies(){
+  let pl=(D.player_stats||[]).filter(p=>p.is_goalie);
+  const search=(document.getElementById('goalie-search')?.value||'').toLowerCase();
+  if(search) pl=pl.filter(p=>p.name.toLowerCase().includes(search)||(p.team||'').toLowerCase().includes(search));
+  pl=[...pl].sort((a,b)=>goSort.dir==='desc'?(b[goSort.col]??0)-(a[goSort.col]??0):(a[goSort.col]??0)-(b[goSort.col]??0));
+
+  if(!document.querySelector('#goalie-leaders .leader-card')){
+    const gl=(D.player_stats||[]).filter(p=>p.is_goalie&&p.gp>=2);
+    document.getElementById('goalie-leaders').innerHTML=
+      ldrBlock(gl,'svp','SV% (min 2 GP)',5,false)+ldrBlock(gl,'gaa','GAA (min 2 GP)',5,true);
+  }
+
+  const sc=c=>goSort.col===c?(goSort.dir==='desc'?'sort-desc':'sort-asc'):'';
+  const html=pl.length===0?'<div class="state-box"><div class="state-title">No goalies found</div></div>':
+    `<table><thead><tr>
+      <th style="width:36px">#</th>
+      <th style="width:28px"></th>
+      <th>Goalie</th><th>Team</th>
+      <th class="r sortable ${sc('gp')}" data-go="gp">GP</th>
+      <th class="r sortable ${sc('sa')}" data-go="sa">SA</th>
+      <th class="r sortable ${sc('sv')}" data-go="sv">SV</th>
+      <th class="r sortable ${sc('ga')}" data-go="ga">GA</th>
+      <th class="r sortable ${sc('svp')}" data-go="svp">SV%</th>
+      <th class="r sortable ${sc('gaa')}" data-go="gaa">GAA</th>
+    </tr></thead><tbody>${pl.map((p,i)=>`<tr>
+      <td class="rank">${i+1}</td>
+      <td style="padding:6px 8px">${logoImg(p.logo,'team-logo-sm',p.team||'')}</td>
+      <td class="hl">${esc(p.name)}</td>
+      <td style="color:var(--text2);font-size:12px">${esc(p.team||'—')}</td>
+      <td class="r">${p.gp}</td>
+      <td class="r">${p.sa||0}</td>
+      <td class="r">${p.sv||0}</td>
+      <td class="r">${p.ga||0}</td>
+      <td class="pts">${typeof p.svp==='number'?p.svp.toFixed(3):'—'}</td>
+      <td class="r">${typeof p.gaa==='number'?p.gaa.toFixed(2):'—'}</td>
+    </tr>`).join('')}</tbody></table>`;
+  setHTML('goalie-table',html);
+  document.querySelectorAll('[data-go]').forEach(th=>th.addEventListener('click',()=>{
+    if(goSort.col===th.dataset.go)goSort.dir=goSort.dir==='desc'?'asc':'desc';
+    else{goSort.col=th.dataset.go;goSort.dir='desc';}
+    renderGoalies();
+  }));
+}
+
+// ── GAMES ─────────────────────────────────────────────────
+function renderGames(){
+  let games=D.game_results||[];
+  const search=(document.getElementById('games-search')?.value||'').toLowerCase();
+  if(gFilter!=='all') games=games.filter(g=>g.game_type===gFilter);
+  if(search) games=games.filter(g=>g.team1.toLowerCase().includes(search)||g.team2.toLowerCase().includes(search)||g.match_id.toLowerCase().includes(search));
+  if(!games.length){empty('games-body','No games found');return}
+
+  const chip=r=>{const m={W:'cw',L:'cl',OTL:'cotl',OTW:'cotw','W-FF':'cwff','L-FF':'clff'};return `<span class="chip ${m[r]||'cl'}">${r}</span>`};
+  const wo=(r1,r2)=>['W','OTW','W-FF'].includes(r1)?1:['W','OTW','W-FF'].includes(r2)?2:0;
+
+  setHTML('games-body',`<div class="games-list">`+games.map(g=>{
+    const w=wo(g.result_t1,g.result_t2);
+    return `<div class="game-card">
+      <div class="game-top">
+        <div class="gt-l">
+          ${logoImg(g.logo_t1,'team-logo',g.team1)}
+          <div class="gt-info">
+            <div class="gt-name ${w===1?'w':'l'}">${esc(g.team1)}</div>
+            <div>${chip(g.result_t1)}</div>
+          </div>
+        </div>
+        <div class="score-block">
+          <span class="sn ${w===1?'w':'l'}">${g.score_t1}</span>
+          <span class="ssep">–</span>
+          <span class="sn ${w===2?'w':'l'}">${g.score_t2}</span>
+        </div>
+        <div class="gt-r">
+          <div class="gt-info" style="text-align:right;align-items:flex-end">
+            <div class="gt-name ${w===2?'w':'l'}">${esc(g.team2)}</div>
+            <div>${chip(g.result_t2)}</div>
+          </div>
+          ${logoImg(g.logo_t2,'team-logo',g.team2)}
+        </div>
+      </div>
+      <div class="game-footer">
+        <span class="game-meta">${g.date} · #${g.match_id}</span>
+        <span class="type-badge tb-${g.game_type||'REG'}">${g.game_type||'REG'}</span>
+      </div>
+    </div>`;
+  }).join('')+`</div>`);
+}
+
+// ── ROSTERS ───────────────────────────────────────────────
+function renderRosters(){
+  let teams=D.rosters||[];
+  const search=(document.getElementById('roster-search')?.value||'').toLowerCase();
+  if(search) teams=teams.filter(t=>t.team.toLowerCase().includes(search)||t.players.some(p=>p.name.toLowerCase().includes(search)));
+  if(!teams.length){empty('rosters-body','No roster data');return}
+  setHTML('rosters-body',`<div class="rosters-grid">`+teams.map(t=>`
+    <div class="roster-card">
+      <div class="roster-head">
+        ${logoImg(t.logo,'team-logo',t.team)}
+        <span class="roster-tname" data-team="${esc(t.team)}">${esc(t.team)}</span>
+        <span class="roster-cnt">${t.players.length}</span>
+      </div>
+      ${t.players.map(p=>`<div class="roster-player"><span>${esc(p.name)}</span><span class="roster-gp">${p.gp} GP</span></div>`).join('')}
+    </div>`).join('')+`</div>`);
+  document.querySelectorAll('.roster-tname').forEach(el=>el.addEventListener('click',()=>showTeam(el.dataset.team,'rosters')));
+}
+
+// ── TEAM PAGE ─────────────────────────────────────────────
+function showTeam(teamName,from){
+  prevPage=from||'standings';
+  const s=(D.standings||[]).find(x=>x.team===teamName)||{gp:0,w:0,l:0,otl:0,pts:0,gf:0,ga:0,diff:0,logo:null};
+  const roster=(D.rosters||[]).find(r=>r.team===teamName);
+  const logo=s.logo||roster?.logo||null;
+  const pNames=new Set((roster?.players||[]).map(p=>p.name));
+  const skaters=(D.player_stats||[]).filter(p=>!p.is_goalie&&pNames.has(p.name)).sort((a,b)=>b.pts-a.pts);
+  const goalies=(D.player_stats||[]).filter(p=>p.is_goalie&&pNames.has(p.name));
+  const games=(D.game_results||[]).filter(g=>g.team1===teamName||g.team2===teamName);
+  const diff=s.diff>0?'+'+s.diff:s.diff;
+  const diffCls=s.diff>0?'var(--win)':s.diff<0?'var(--loss)':'var(--text)';
+  let stab='stats';
+
+  const chip=r=>{const m={W:'cw',L:'cl',OTL:'cotl',OTW:'cotw','W-FF':'cwff','L-FF':'clff'};return `<span class="chip ${m[r]||'cl'}">${r}</span>`};
+
+  const buildStats=()=>`
+    ${skaters.length?`<div class="section-lbl">Skaters</div><div class="surface"><div class="tbl-wrap"><table>
+      <thead><tr><th>Player</th><th class="r">POS</th><th class="r">GP</th><th class="r">G</th><th class="r">A</th><th class="r">PTS</th><th class="r">+/-</th><th class="r">HIT</th></tr></thead>
+      <tbody>${skaters.map(p=>{const pm=p.plus_minus||0;const pmc=pm>0?'diff-pos':pm<0?'diff-neg':'diff-neu';return `<tr><td class="hl">${esc(p.name)}</td><td class="r" style="font-size:12px;color:var(--text3)">${esc(p.position||'—')}</td><td class="r">${p.gp}</td><td class="r">${p.g}</td><td class="r">${p.a}</td><td class="pts">${p.pts}</td><td class="r ${pmc}">${pm>0?'+'+pm:pm}</td><td class="r">${p.hits}</td></tr>`;}).join('')}</tbody>
+    </table></div></div>`:''}
+    ${goalies.length?`<div class="section-lbl">Goalies</div><div class="surface"><div class="tbl-wrap"><table>
+      <thead><tr><th>Goalie</th><th class="r">GP</th><th class="r">SA</th><th class="r">SV</th><th class="r">SV%</th><th class="r">GAA</th></tr></thead>
+      <tbody>${goalies.map(p=>`<tr><td class="hl">${esc(p.name)}</td><td class="r">${p.gp}</td><td class="r">${p.sa||0}</td><td class="r">${p.sv||0}</td><td class="pts">${typeof p.svp==='number'?p.svp.toFixed(3):'—'}</td><td class="r">${typeof p.gaa==='number'?p.gaa.toFixed(2):'—'}</td></tr>`).join('')}</tbody>
+    </table></div></div>`:''}`;
+
+  const buildGames=()=>`<div class="games-list">${games.map(g=>{
+    const isT1=g.team1===teamName;
+    const myS=isT1?g.score_t1:g.score_t2,oppS=isT1?g.score_t2:g.score_t1;
+    const myR=isT1?g.result_t1:g.result_t2,opp=isT1?g.team2:g.team1;
+    const oppLogo=isT1?g.logo_t2:g.logo_t1;
+    const won=['W','OTW','W-FF'].includes(myR);
+    return `<div class="game-card">
+      <div class="game-top" style="grid-template-columns:1fr 100px 1fr">
+        <div class="gt-l">
+          ${logoImg(logo,'team-logo',teamName)}
+          <div class="gt-info"><div class="gt-name w">${esc(teamName)}</div><div>${chip(myR)}</div></div>
+        </div>
+        <div class="score-block">
+          <span class="sn ${won?'w':'l'}">${myS}</span>
+          <span class="ssep">–</span>
+          <span class="sn ${!won?'w':'l'}">${oppS}</span>
+        </div>
+        <div class="gt-r">
+          <div class="gt-info" style="text-align:right"><div class="gt-name l">${esc(opp)}</div></div>
+          ${logoImg(oppLogo,'team-logo',opp)}
+        </div>
+      </div>
+      <div class="game-footer"><span class="game-meta">${g.date} · #${g.match_id}</span><span class="type-badge tb-${g.game_type||'REG'}">${g.game_type||'REG'}</span></div>
+    </div>`;
+  }).join('')}</div>`;
+
+  const logoHtml = logo
+    ? `<img src="${esc(logo)}" class="team-hero-logo" alt="${esc(teamName)}" onerror="this.style.display='none'"/>`
+    : '';
+
+  setHTML('team-inner',`
+    <button class="back-btn" id="back-btn">← Back</button>
+    <div class="team-hero">
+      ${logoHtml}
+      <div class="team-hero-info">
+        <div class="team-name-big">${esc(teamName)}</div>
+        <div class="team-record">${s.w}-${s.l}-${s.otl} · ${s.pts} PTS · ${s.gp} GP</div>
+      </div>
+    </div>
+    <div class="team-stat-grid">
+      <div class="tsg-cell"><div class="tsg-lbl">GF</div><div class="tsg-val">${s.gf}</div></div>
+      <div class="tsg-cell"><div class="tsg-lbl">GA</div><div class="tsg-val">${s.ga}</div></div>
+      <div class="tsg-cell"><div class="tsg-lbl">DIFF</div><div class="tsg-val" style="color:${diffCls}">${diff}</div></div>
+      <div class="tsg-cell"><div class="tsg-lbl">Players</div><div class="tsg-val">${roster?.players?.length||0}</div></div>
+    </div>
+    <div class="subtabs">
+      <button class="subtab active" data-st="stats">Player Stats</button>
+      <button class="subtab" data-st="games">Games (${games.length})</button>
+    </div>
+    <div id="stab-content"></div>`);
+
+  setHTML('stab-content',buildStats());
+  document.getElementById('back-btn').addEventListener('click',()=>nav(prevPage));
+  document.querySelectorAll('.subtab').forEach(btn=>btn.addEventListener('click',()=>{
+    stab=btn.dataset.st;
+    document.querySelectorAll('.subtab').forEach(b=>b.classList.toggle('active',b.dataset.st===stab));
+    setHTML('stab-content',stab==='stats'?buildStats():buildGames());
+  }));
+  nav('team');
+}
+
+// ── LEADER BLOCK ──────────────────────────────────────────
+function ldrBlock(arr,key,label,n=5,reverseSort=false){
+  const sorted=[...arr].filter(p=>p.gp>=1).sort((a,b)=>reverseSort?(a[key]??0)-(b[key]??0):(b[key]??0)-(a[key]??0));
+  const top=sorted.slice(0,n);
+  if(!top.length)return '';
+  const maxVal=Math.max(...top.map(p=>p[key]||0))||1;
+  return `<div class="leader-card"><div class="leader-title">${label}</div>${top.map((p,i)=>{
+    const v=typeof p[key]==='number'&&!Number.isInteger(p[key])?p[key].toFixed(key==='gaa'?2:3):p[key]??0;
+    const logoHtml=p.logo
+      ?`<img src="${esc(p.logo)}" style="width:18px;height:18px;object-fit:contain;flex-shrink:0;border-radius:2px" alt="" onerror="this.style.display='none'"/>`
+      :'';
+    return `<div class="leader-row">
+      <div class="lr-rank ${i===0?'r1':''}">${i+1}</div>
+      ${logoHtml}
+      <div class="lr-info">
+        <div class="lr-name">${esc(p.name)}</div>
+        <div class="lr-team">${esc(p.team||'')}</div>
+        <div class="lr-bar"><div class="lr-bar-fill" style="width:${Math.round((p[key]||0)/maxVal*100)}%"></div></div>
+      </div>
+      <div class="lr-val">${v}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── FILTER WIRING ─────────────────────────────────────────
+document.addEventListener('click',e=>{
+  if(e.target.dataset.skp!==undefined){
+    skPos=e.target.dataset.skp;
+    document.querySelectorAll('[data-skp]').forEach(b=>b.classList.toggle('active',b.dataset.skp===skPos));
+    if(D)renderSkaters();
+  }
+  if(e.target.dataset.gf!==undefined){
+    gFilter=e.target.dataset.gf;
+    document.querySelectorAll('[data-gf]').forEach(b=>b.classList.toggle('active',b.dataset.gf===gFilter));
+    if(D)renderGames();
+  }
+});
+document.addEventListener('input',e=>{
+  if(!D)return;
+  const m={'skater-search':renderSkaters,'goalie-search':renderGoalies,'games-search':renderGames,'roster-search':renderRosters};
+  if(m[e.target.id])m[e.target.id]();
+});
+
+load();
+setInterval(load,5*60*1000);
+</script>
+</body>
+</html>

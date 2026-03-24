@@ -1,0 +1,17 @@
+{
+    "RK": {
+        "days": {
+            "Thursday": "Tbd",
+            "Sunday": "Tbd",
+            "Monday": "TBD",
+            "Tuesday": "TBD",
+            "Wednesday": "TBD"
+        }
+    },
+    "ITHL": {
+        "days": {
+            "Thursday": "9 PM",
+            "Monday": "8-10"
+        }
+    }
+}
